@@ -113,9 +113,9 @@ def costFn(xI,xTmp,xTmpH,uTmp,dt,a,b,c,d,e,f):
     # [6] Hospital
     # [7] Deaths (during interval)
     # [8] Remaining Infected (additonal incurred)
-    allCostsSummed = [sum(testCost[:,0]),sum(testCost[:,1]),\
-                      sum(distCost[:,0]),sum(distCost[:,1]),\
-                      sum(sickCost), sum(hospCost),\
+    allCostsSummed = [sum(testCost[:,0])*dt,sum(testCost[:,1])*dt,\
+                      sum(distCost[:,0])*dt,sum(distCost[:,1])*dt,\
+                      sum(sickCost)*dt, sum(hospCost)*dt,\
                       e[0]*(xTmp[-1,8]-xI[8])+e[1]*(xTmp[-1,17]-xI[17]),\
                       f[0]*(xTmp[-1,4]-xI[4])+ f[1]*(xTmp[-1,13]-xI[13]) ]
                         

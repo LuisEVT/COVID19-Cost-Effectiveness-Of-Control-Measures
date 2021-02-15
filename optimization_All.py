@@ -36,7 +36,7 @@ def initialization():
     #######################
 
     # THIS CAN BE SET FOR HIGH-RISK TARGETING STRATEGIES
-    hiRiskCtrl = [0] #[0.6666,0.8]
+    hiRiskCtrl = False
 
     # rFrac: 'TRUE' MEANS THAT R_e TARGET IS GIVEN AS A FRACTION
     rFrac = True
@@ -45,37 +45,21 @@ def initialization():
     recomputeData = False
     
 
-
+    ###################
     # TO STAY CONSISTENT, THESE VALUES ARE USED THROUGHOUT EACH PLOT
-    ## Plot parameters
-    totCostLevels = np.arange(0.0,8.1,0.5)*1E9 # VALUES FOR CONTOURS
-    deathLevels = np.array([0.1,0.4,2,4,6,8,10,12,13,14])*1E4 # VALUES FOR CONTOURS
+    # Plot parameters
+    ###################
+    
+    totCostLevels = np.arange(0.0, 8.0 ,0.5)*1E9 # VALUES FOR CONTOURS
+    deathLevels = np.array([0.1, 0.5, 1.0, 2.0, 4.0, 6.0, 8.0])*1E4 # VALUES FOR CONTOURS
     nLevel = 10 # NUMBER OF COST CONTOURS ( USED FOR THE ADDITIONAL PLOTS)
 
-    # ADDITIONAL PLOTS CAN BE FOUND IN 'optimalMinCost_R_plots' and 'optimalMinCost_Budget_plots'
-    # WHEN PARAMETER SET TO TRUE.
-    showAllPlots = False 
-
-
-
-    
-    # Decide which xLimits,yLimits are appropriate
-    xLimits = []
-    xLimits = [0,20] 
-    # xLimits = [0,11]
-    # xLimits = [0,8E9]
-    
-    yLimits = []
-    yLimits = [20000,140000] # Deaths  
-    # yLimits =  [1E9,8E9] # Cost
-
-    
 
     ###############
     ### CONTROL PARAMETERS
     ###############
 
-    # MAX. VALUE FOR CONTROL MEASURES
+    # MAX. VALUE FOR CONTROL MEASURES (0 - 1)
     # [1]: LOW-RISK TESTING
     # [2]: HIGH-RISK TESTING
     # [3]: LOW-RISK SOCIAL DISTANCING
@@ -102,54 +86,91 @@ def initialization():
     xI[0] = N[0]-xI[1] # Susceptible low risk
     xI[9] = N[1]-xI[10] # Susceptible high risk
     
-    ## System parameters
+    #############
+    # SYSTEM PARAMETERS
+    #############
+
+    # BASELINE TRANSMISSION RATE
     beta =0.0640
+    # CONTACT MATRIX
     Phi = np.array([[10.56,2.77],
-                    [9.4,2.63]]) ###Contact matrix
-    
-    gamA = 1/4####1/gamA~4
-    gamY = 1/4###gamA=gamY##1/gamA~4
+                    [9.4,2.63]])
+
+    # RECOVERY RATE ON ASYMPTOMATIC COMPARTMENT 
+    gamA = 1/4 
+    # RECOVERY RATE ON SYMPTOMATIC NON-TREATMENT COMPARTMENT
+    gamY = 1/4 
+    # RECOVERY RATE IN HOSPITALIZED COMPARTMENT
     gamH = 1/10.7
+    # RATE FROM SYMPTOM ONSET TO HOSPITALIZED
     eta = 0.1695
-    tau = 0.57 # asymptomatic proportion
-    sig = 1/2.9### exposed rate
-    rhoA = 1/2.3###rhoA=rhoY##1/rhoY~2.3
-    rhoY = 1/2.3###1/rhoY~2.3
+    # SYMPTOMATIC PROPORTION
+    tau = 0.57 
+    # EXPOSURE RATE
+    sig = 1/2.9 
+    # PRE-ASYMPTOMATIC COMPARTMENT EXIT RATE
+    rhoA = 1/2.3 
+    # PRE-SYMLTOMATIC COMPARTMENT EXIT RATE 
+    rhoY = 1/2.3 
+    # PROPORTION OF PRE-SYMPTOMATIC TRANSMISSION
     P = 0.44
+    # RELATIVE INFECTIOUSNESS OF SYMPTOMATIC INDIVIDUALS
     wY =1.0
+    # RELATIVE INFECTIOUSNESS OF INFECTIOUS INDIVIDUALS IN COMPARTMENT I^A
     wA =0.66
     
-    # Derived system parameters
+    ##############
+    # DERIVED SYSTEM PARAMETERS 
+    #############
+
+    # INFECTED FATALITY RATIO, AGE SPECIFIC (%)
     IFR = np.array([0.6440/100,6.440/100])
+    # SYMPTOMATIC FATALITY RATIO, AGE SPECIFIC (%)
     YFR = np.array([IFR[0]/tau,IFR[1]/tau]) 
+    # SYMPTOMATIC CASE HOSPITALIZATION RATE (%)
     YHR = np.array([4.879/100,48.79/100])
+    # HOSPITALIZED FATALITY RATIO, AGE SPECIFIC (%)
     HFR = np.array([YFR[0]/YHR[0],YFR[1]/YHR[1]])   
+
+    # RELATIVE INFECTIOUSNESS OF PRE-SYMTOMATIC INDIVIDUALS
     wP= P/(1-P) /(tau*wY/rhoY + (1-tau)*wA/rhoA) \
         * ((1-tau)*wA/gamA \
         + tau*wY* np.array([YHR[0]/eta+(1-YHR[0])/gamY, \
                           YHR[1]/eta+(1-YHR[1])/gamY]))            
     wPY = wP*wY
     wPA = wP*wA     
+
+    # RATE OF SYMPTOMATIC INDIVIDUALS GO TO HOSPITAL, AGE-SPECIFIC
     Pi = gamY*np.array([YHR[0]/(eta+(gamY-eta)*YHR[0]),\
                       YHR[1]/(eta+(gamY-eta)*YHR[1])])# Array with two values
     
-    # Additional system parameters    
-    mu = 1/8.1###1/mu~8.1
-    theta = 3000 #2352 ventilators in Houston (https://www.click2houston.com/health/2020/04/10/texas-medical-center-data-shows-icu-ventilator-capacity-vs-usage-during-coronavirus-outbreak/)
+    # RATE AT WHICH TERMINAL PATIENTS DIE
+    mu = 1/8.1 
+
+    # TOTAL VENTILATOR CAPACITY IN ALL HOSPITALS
+    # #2352 ventilators in Houston (https://www.click2houston.com/health/2020/04/10/texas-medical-center-data-shows-icu-ventilator-capacity-vs-usage-during-coronavirus-outbreak/)
+    theta = 3000 
+
+    # TWO TIMES AS MANY PEOPLE NEED VENTILATORS AS THOSE WHO DIE
+    rr = 2 
+
+    # DEATH RATE ON HOSPITALIZED INDIVIDUALS, AGE SPECIFIC
     nu = gamH*np.array([HFR[0]/(mu+(gamH-mu)*HFR[0]),\
                       HFR[1]/(mu+(gamH-mu)*HFR[1])])# Array with two values    
         
-    ## Costs
+    ##########
+    # COST
+    ##########
     a = np.array([[0,2.3,27],[0,2.3,27]]) # Testing costs
     b = np.array([[0,0,40],[0,0,40]]) # Distancing costs
     c = [100,100]     # Cost 5: Opportunity cost for sickness per day (low and high risk)
     d =  [500,750]   # Cost 6: Hospitalization cost per day  (low and high risk)
-    e = [1,1]#[100000,75000] # Death
-    f = [1,1]#[5000,5000] # Cost of remaining infected
+    e = [1,1] # Death
+    f = [1,1] # Remaining infected
     
 
     params = [wY,wA,wPY,wPA,beta,sig,tau,rhoA,rhoY,
-        gamA,gamY,gamH,Pi,eta,nu,mu,theta,Phi]     
+        gamA,gamY,gamH,Pi,eta,nu,mu,theta,rr,Phi]     
     
     ### Dictionary for functions that require it
     dictVar={'N':N,
@@ -178,6 +199,7 @@ def initialization():
         'Pi':Pi,
         'mu':mu,
         'theta':theta,
+        'rr':rr,
         'nu':nu,
         'a':a,
         'b':b,
@@ -196,9 +218,6 @@ def initialization():
         'totCostLevels':totCostLevels,
         'deathLevels':deathLevels,
         'nLevel':nLevel,
-        'showAllPlots':showAllPlots,
-        'xLimits':xLimits,
-        'yLimits':yLimits,
         'recomputeData':recomputeData
         } 
 
@@ -218,7 +237,6 @@ def compCost(u,dictVar):
     Purpose:
         COMPUTE THE MARGINAL COST FOR TESTING AND SOCIAL DISTANCING
     '''
-
     # INITIAL CONDITION
     
     N = dictVar['N']
@@ -263,7 +281,7 @@ def compReproductionNumber(u,dictVar,Imm):
     Purpose:
         COMPUTE THE REPRODUCTION NUMBER 'RHO'
     '''
-    
+
     # INITIAL CONDITION
     N = dictVar['N']
     
@@ -288,10 +306,7 @@ def compReproductionNumber(u,dictVar,Imm):
 
     # POPULATION THAT IS NOT IMMUNE 
     S = (1-Imm)*np.array(N)
-    
-    # (Optional) fix high risk controls
-    if len(hiRiskCtrl)==2:
-        u[1],u[3] = hiRiskCtrl
+
 
     ###############################
     ### COMPUTE REPRODUCTION NUMBER
@@ -366,7 +381,7 @@ def compReproductionNumber(u,dictVar,Imm):
 ### Used to find the optimal control measures for a specific R0 / Cost
 ################
 
-def optimalControls_R(dictVar,uVec=[0.0,0.0,0.0,0.0],rho = 1.0,\
+def optimalControls_R(dictVar,uVec=[0.0,0.0,0.0,0.0], rho = 1.0,\
                       immunity = 0.0):
     '''
     Return: 
@@ -387,69 +402,129 @@ def optimalControls_R(dictVar,uVec=[0.0,0.0,0.0,0.0],rho = 1.0,\
     # THINGS I NEED
     uMax = dictVar['uMax']
     hiRiskCtrl = dictVar['hiRiskCtrl']
+
+    highestCost = compCost(uMax,dictVar)
     
     try:
-
-        # rho - computedRho = 0
-        consR = {'type':'eq',
-                'fun':lambda x,var,imm: rho - compReproductionNumber(x,var,imm),
-                'args':[dictVar,immunity]}
-
-        boundary = [ [0,uMax[0]], 
-                    [0,uMax[1]],
-                    [0,uMax[2]], 
-                    [0,uMax[3]] ]
        
-        if len(hiRiskCtrl)==2 :
-                        
-            
-            # Try first to solve with no low-risk
+        if hiRiskCtrl :
 
-           # Constrain low-risk control to 0
-            consU0 = {'type':'eq',
-                'fun':lambda x: x[0]}
-            consU2 = {'type':'eq',
-                'fun':lambda x: x[2]}
+            # 1. See if [0,u_max[1],0,u_max[2]] gives R_e less than the target
+            # 2. If so, then optimize setting u[0]=u[2]=0
+            # 3. if not, then optimize setting  u[1]=u_max[1], u[3]=u_max[3]
 
-            soln = opt.minimize(compCost,[0,uMax[1],0,uMax[3]],
-            args = dictVar,
-            method = 'SLSQP',
-            bounds = boundary,
-            constraints=[consR,consU0,consU2],
-            options = {'disp':False,
-                        'eps':0.001})
-            
-            # If solution has the max hi-risk control, then let the low risk be nonzero
-            if (soln.x[1] >= uMax[1]-1.E-8) and (soln.x[3] >= uMax[3] - 1.E-8):
+            uOpt = np.array( [ 0, uMax[1], 0, uMax[2] ] )
+            compR = compReproductionNumber(  uOpt , dictVar, immunity )
 
-                # Constrain hi-risk controls
-                consU1 = {'type':'eq',
-                    'fun':lambda x: x[1]-uMax[1]}
-                consU3 = {'type':'eq',
-                    'fun':lambda x: x[3]-uMax[3]}
+            if rho >= compR :
 
-                # Add margin in limits in case there is problems with opt.
-                soln = opt.minimize(compCost,[uMax[0],uMax[1]+.001,uMax[2],uMax[3]+.001],
+                # I ONLY NEED HI-RISK CONTROL MEASURES.
+
+                # rho - computedRho >= 0
+                consR = {'type':'ineq',
+                        'fun':lambda x,var,imm: rho - compReproductionNumber( [ 0, x[0], 0, x[1] ],var,imm),
+                        'args':[dictVar,immunity]} 
+
+                boundary = np.array([ [0,uMax[1]], 
+                                      [0,uMax[3]] ]) 
+
+                func = lambda x,var: compCost( [ 0, x[0], 0, x[1] ] ,var) / highestCost 
+                initialGuess =  [0 , 0 ]#[ uMax[1],uMax[3] ]
+
+
+                soln = opt.minimize(func,initialGuess ,
                 args = dictVar,
                 method = 'SLSQP',
                 bounds = boundary,
-                constraints=[consR,consU1,consU3],
+                constraints=[consR],
                 options = {'disp':False,
                             'eps':0.001})
+
+                uOpt[1] = soln.x[0]
+                uOpt[3] = soln.x[1]
+
+                expR = compReproductionNumber( uOpt , dictVar,immunity  )
+                if rho + 0.005 >= expR   :
+                    funcVal = compCost( uOpt , dictVar)
+                else:
+                    uOpt = np.array( [ 0, uMax[1] , 0 , uMax[3] ] )
+                    funcVal = compCost( uOpt , dictVar)
+
+                return uOpt, funcVal
+
+            else:
+
+                # I WILL NEED MORE THAN JUST HI-RISK MEASURES
+
+                compR = compReproductionNumber(  uMax , dictVar, immunity )
+                if compR >= rho :
+                    return uMax, compCost(uMax,dictVar)
+
+                boundary = np.array([ [0,uMax[0]],
+                                      [0,uMax[2]] ]) 
+
+                # rho - computedRho >= 0
+                consR = {'type':'ineq',
+                        'fun':lambda x,var,imm: rho - compReproductionNumber( [ x[0], uOpt[1], x[1], uOpt[3] ], var,imm),
+                        'args':[dictVar,immunity]} 
+
+                func = lambda x,var: compCost( [ x[0], uOpt[1], x[1], uOpt[3] ],var) / highestCost 
+                initialGuess = [0,0] # [ uMax[0],uMax[2] ]
+
+
+
+
+                soln = opt.minimize(func,initialGuess,
+                args = dictVar,
+                method = 'SLSQP',
+                bounds = boundary,
+                constraints=[consR],
+                options = {'disp':False,
+                            'eps':0.001})
+
+                uOpt[0] = soln.x[0]
+                uOpt[2] = soln.x[1]    
+
+                expR = compReproductionNumber( uOpt, dictVar,immunity  )
                 
+                if rho + 0.005 >= expR   :
+
+                    funcVal = compCost(uOpt,dictVar)
+                else:
+                    uOpt = uMax 
+                    funcVal = compCost(uMax,dictVar)
+
+
+                return uOpt , funcVal              
 
         else:
-            soln = opt.minimize(compCost,uVec,
+
+            boundary = [ [0,uMax[0]], 
+                        [0,uMax[1]],
+                        [0,uMax[2]], 
+                        [0,uMax[3]] ]
+
+            # rho - computedRho = 0
+            consR = {'type':'ineq',
+                    'fun':lambda x,var,imm: rho - compReproductionNumber(x,var,imm) ,
+                    'args':[dictVar,immunity]} 
+
+            soln = opt.minimize(lambda x,var: compCost(x,var) / highestCost ,[0,0,0,0],
             args = dictVar,
             method = 'SLSQP',
             bounds = boundary,
             constraints=[consR],
             options = {'disp':False,
-                        'eps':0.001})
+                        'eps':0.0001})
 
-        # soln.x : OPTIMAL uVec SOLUTION
-        # soln.fun: MINIMUM COST BASED ON THE OPTIMAL CONTROLS
-        return soln.x , soln.fun
+            expR = compReproductionNumber( soln.x, dictVar,immunity  )
+
+            
+            if rho + 0.005 >= expR  :
+                return soln.x, compCost(soln.x,dictVar)
+            else:
+                return uMax , compCost(uMax,dictVar)
+
 
     except ValueError:
 
@@ -495,70 +570,122 @@ def optimalControls_Budget(dictVar,uVec=[0.0,0.0,0.0,0.0], cost = 1.0E10,immunit
     uMax = dictVar['uMax']
     hiRiskCtrl = dictVar['hiRiskCtrl']
 
-    try:
+    highest_Re = compReproductionNumber( [0,0,0,0], dictVar, immunity)
+    # highestCost = compCost(uMax,dictVar)
 
-        # Ensure maxCost >= compCost
-        consCost = {'type':'ineq',
-                'fun':lambda x,var: cost - compCost(x,var),
-                'args':[dictVar]}
+    try:      
 
-        boundary = np.array([ [0,uMax[0]], 
-                     [0,uMax[1]],
-                     [0,uMax[2]], 
-                     [0,uMax[3]] ])
-        
+        if hiRiskCtrl :
 
-        if len(hiRiskCtrl)==2 :
+            uOpt = np.array( [ 0, uMax[0], 0, uMax[2] ] )
+            expCost = compCost(uOpt , dictVar)
 
-            # Try first to solve with no lo-risk
-           # Constrain low-risk control to 0
-            consU0 = {'type':'eq',
-                'fun':lambda x: x[0]}
-            consU2 = {'type':'eq',
-                'fun':lambda x: x[2]}
+            # CAN I AFFORD MAX MEASURES FOR ONLY HI-RISK ?
+            if abs(cost - expCost) >= 0.005 * cost  : 
 
-            soln = opt.minimize(compReproductionNumber,[0,uMax[1],0,uMax[3]],
-                        args = (dictVar,immunity),
-                        method = 'SLSQP',
-                        bounds = boundary,
-                        constraints=[consCost,consU0,consU2],
-                        options = {'disp':False,
-                                    'eps':0.001})
+                # MAX CONTROL MEASURES FOR HI-RISK WAS AFFORDABLE, 
+                # WHAT CONTROL MEASURES CAN I AFFORD FOR LOW-RISK ?
 
-            # If solution has the max hi-risk control, then let the low risk be nonzero
-            # and ensure that the hi control is maxed out
-            if (soln.x[1] >= uMax[1]-1.E-8) and (soln.x[3] >= uMax[3]-1.E-8):
-                consU1 = {'type':'eq',
-                    'fun':lambda x: x[1]-uMax[1]}
-                consU3 = {'type':'eq',
-                    'fun':lambda x: x[3]-uMax[3]}
+                boundary = np.array([ [0,uMax[0]],
+                                      [0,uMax[2]] ])
+
+                # Ensure BUDGET >= COMPUTED COST
+                consCost = {'type':'ineq',
+                            'fun':lambda x,var: ( cost - compCost( [ x[0], uOpt[1], x[1] , uOpt[3] ] , var ) ) ,
+                            'args':(dictVar,)}
 
 
-                soln = opt.minimize(compReproductionNumber,uMax,
-                        args = (dictVar,immunity),
-                        method = 'SLSQP',
-                        bounds = boundary,
-                        constraints=[consCost,consU1,consU3],
-                        options = {'disp':False,
-                                    'eps':0.001})
+                func = lambda x,var,imm: compReproductionNumber( [ x[0], uOpt[1], x[1] , uOpt[3] ]  , var, imm) / highest_Re
+                initialGuess = np.array( [ 0, 0 ] ) 
 
-        else:
-            soln = opt.minimize(compReproductionNumber,uVec,
+                soln = opt.minimize(func,initialGuess,
+                            args = (dictVar,immunity),
+                            method = 'SLSQP',
+                            bounds = boundary,
+                            constraints=[consCost],
+                            options = {'disp':False,
+                                        'eps':0.0001})
+
+                uOpt[0] = soln.x[0]
+                uOpt[2] = soln.x[1]
+
+                optCost = compCost(uOpt , dictVar)
+
+                # IF THE DIFFERENCE IN COST 
+                if 0.005 * cost >= abs(cost - optCost)  :
+                    return uOpt, compCost(uOpt,dictVar)
+                else:
+                    uOpt = np.array( [ 0, uMax[1], 0, uMax[2] ] )
+                    return uOpt , compCost(uOpt,dictVar)
+
+            else: 
+
+                # MAX CONTROL MEASURES FOR HI-RISK WAS UNAFFORDABLE, 
+                # WHAT CONTROL MEASURES CAN I AFFORD FOR HI-RISK ONLY?
+
+                boundary = np.array([ [0,uMax[1]],
+                                      [0,uMax[3]] ])
+
+                # Ensure maxCost >= compCost
+                consCost = {'type':'ineq',
+                            'fun':lambda x,var:  cost - compCost( [ 0, x[0], 0, x[1] ] ,var) ,
+                            'args':(dictVar,)}
+
+                func = lambda x,var,imm: compReproductionNumber( [ 0, x[0], 0, x[1] ]  , var, imm) / highest_Re
+                initialGuess = np.array( [ 0 , 0 ] )
+
+                soln = opt.minimize(func,initialGuess,
                         args = (dictVar,immunity),
                         method = 'SLSQP',
                         bounds = boundary,
                         constraints=[consCost],
                         options = {'disp':False,
-                                    'eps':0.001})
+                                    'eps':0.0001})
 
-        # soln.x : OPTIMAL uVec SOLUTION
-        # soln.fun: MINIMUM R0 BASED ON THE OPTIMAL CONTROLS
-        return soln.x , compCost(soln.x,dictVar)
+                uOpt[1] = soln.x[0]
+                uOpt[3] = soln.x[1]             
 
-    except ValueError:
+                expCost = compCost(uOpt , dictVar)     
 
+                if 0.005 * cost >= abs(cost - expCost) :
+                    return uOpt, compCost(uOpt,dictVar)
+                else:
+                    uOpt = np.array([0,0,0,0])
+                    return uOpt, compCost(uOpt,dictVar)
+
+        else:
+
+            boundary = [ [0,uMax[0]], 
+                        [0,uMax[1]],
+                        [0,uMax[2]], 
+                        [0,uMax[3]] ]
+
+            # Ensure maxCost >= compCost
+            consCost = {'type':'ineq',
+                    'fun':lambda x,var:  cost - compCost(x,var) ,
+                    'args':[dictVar]}
+
+            soln = opt.minimize(lambda x,var,imm: compReproductionNumber(x,var,imm) / highest_Re ,np.array( [ 0, 0,0,0 ] ) ,
+                        args = (dictVar,immunity),
+                        method = 'SLSQP',
+                        bounds = boundary,
+                        constraints=[consCost],
+                        options = {'disp':False,
+                                    'eps':0.0001})
+
+
+            optCost = compCost( soln.x, dictVar)
+            if 0.005 * cost >= abs(cost - optCost)  :
+                return soln.x, optCost
+            else:
+                uOpt = np.array([0,0,0,0])
+                return uOpt , compCost(uOpt,dictVar)
+
+
+    except ValueError as ve:
         # `x0` violates bound constraints"
-        return uMax, compCost(uMax,dictVar)
+        uOpt = np.zeros(4)
+        return uOpt, compCost(uOpt,dictVar)
 
     except Exception as e:
 
@@ -652,26 +779,31 @@ def optimalMinCost_R(dictVar, ti, frac, at = 10 , rt = 0.001):
             threshold = np.sum(xNow[1:5]) + np.sum(xNow[10:15]) 
 
             if threshold > minInfected:
-                
-                # COMPUTE THE IMMUNITY LEVEL ( for low and high)
-                imm = 1 - xNow[ [0,9] ] / N
-                # CURRENT R0 with no control
-                curR = compReproductionNumber(uCtrl,dictVar,imm)
-                
+
+                # COMPUTE THE IMMUNITY LEVEL ( for low and high) 
+                imm = 1 - xNow[ [0,9] ] / N  
+
                 # Target R, 2 options
-                if rFrac: # Make target R as fraction    
+                if rFrac: # Make target R as fraction   
+
+                    # CURRENT R0 with no control
+                    curR = compReproductionNumber(0.0*uCtrl,dictVar,imm)
                     targetR = curR * frac
+
                 else:     # Make target R as given value
                     targetR  = frac
                 
                 # OPTIMAL CONTROLS FOR RESPECTIVE TARGET R0 
                 uCtrl, _ = optimalControls_R(dictVar, uVec = uMax,rho=targetR, immunity=imm)
+                # Compute repro number with control
+                # If repro number < targetR + .01, then accept uCtrl
+                # Otherwise use max control
             else:
                 # SET CONTROLS TO ZERO
                 uCtrl = np.zeros(4)
 
             # FORWARD SOLVE REQUIRES A LIST OF LIST OF CONTROLS 
-            uCtrlInt = np.array([uCtrl])  #np.tile(uCtrl.reshape((4,1)), nt).T
+            uCtrlInt = np.array([uCtrl])  
         
             # FIND THE SOLUTION WITH OPTIMAL CONTROLS IN SMALL INTERVALS
             xNow, _ , _ , allCostSumTotTmp = forwardSolve(xNow, jt, jt +1, uCtrlInt, dt, a, b, c, d, e, f, params, at, rt  )
@@ -864,7 +996,7 @@ def optimalMinCost_R_Simulation(dictVar,t1,tstep,f0,ff,fstep,**kwargs):
         json.dump(data, f,indent = 4)
 
 
-def optimalMinCost_R_plots(dictVar):
+def optimalMinCost_R_plots(dictVar, showAllPlots = False):
     
     
     filename = dictVar['filename'][0]
@@ -872,7 +1004,6 @@ def optimalMinCost_R_plots(dictVar):
     deathLevels = dictVar['deathLevels']
     nLevel = dictVar['nLevel']
     rFrac = dictVar['rFrac']
-    showAllPlots = dictVar['showAllPlots']
     
     ############################################
 
@@ -887,6 +1018,13 @@ def optimalMinCost_R_plots(dictVar):
     ACSArr = np.array(data['data'])
 
     ##########################################
+
+
+    xlabel = 'Control policy start day'
+    if rFrac:
+        ylabel  = 'Target  $R_e$ fraction'
+    else:
+       ylabel = 'Target  $R_e$ value'
 
 
 
@@ -906,8 +1044,8 @@ def optimalMinCost_R_plots(dictVar):
         cbar1 = plt.colorbar(pos1) 
         cbar1.set_label('Cost (US Dollars)')
     
-        plt.xlabel('Policy Start Day of Control Measures')
-        plt.ylabel('Fraction $R_e$')
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
         plt.title('Implementation marginal cost')
     
         ########################################
@@ -920,8 +1058,8 @@ def optimalMinCost_R_plots(dictVar):
         cbar2 = plt.colorbar(pos2) 
         cbar2.set_label('Cost (US Dollars)')
     
-        plt.xlabel('Policy Start Day of Control Measures')
-        plt.ylabel('Fraction $R_e$')
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
         plt.title('Sickness Cost')   
     
         ########################################
@@ -935,8 +1073,8 @@ def optimalMinCost_R_plots(dictVar):
         cbar3 = plt.colorbar(pos3) 
         cbar3.set_label('Cost (US Dollars)')
     
-        plt.xlabel('Policy Start Day of Control Measures')
-        plt.ylabel('Fraction $R_e$')
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
         plt.title('Hospital Cost')
     
         ########################################
@@ -949,8 +1087,8 @@ def optimalMinCost_R_plots(dictVar):
         cbar4 = plt.colorbar(pos4) 
         cbar4.set_label('Cost (US Dollars)')
     
-        plt.xlabel('Policy Start Day of Control Measures')
-        plt.ylabel('Fraction $R_e$')
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
         plt.title('Number of Deaths')
     
         ########################################
@@ -963,8 +1101,8 @@ def optimalMinCost_R_plots(dictVar):
         cbar5 = plt.colorbar(pos5) 
         cbar5.set_label('Cost (US Dollars)')
     
-        plt.xlabel('Policy Start Day of Control Measures')
-        plt.ylabel('Fraction $R_e$')
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
         plt.title('Number of remaining infections')
 
     ########################################
@@ -1000,19 +1138,21 @@ def optimalMinCost_R_plots(dictVar):
                     levels = deathLevels) # Note: Transpose because X needs to be in the column
 
 
-    plt.clabel(pos7,fmt=lambda x: "{:.1E}".format(x))
+    plt.clabel(pos7,fmt= lambda x: "{:.2E}".format(x)   )
 
 
     cbar1 = plt.colorbar(pos6)
     cbar1.set_label('Policy cost in billions of USD')
 
-    plt.xlabel('Control policy start day')
+
     if rFrac:
-        plt.ylabel('Target  $R_e$ fraction')
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
         plt.title("Constant $R_e$ reduction strategies")
     else:
-       plt.ylabel('Target  $R_e$ value')
-       plt.title("$R_e$ target value strategies")
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        plt.title("$R_e$ target value strategies")
     
 
     ###############################
@@ -1070,7 +1210,7 @@ def optimalMinCost_R_plots(dictVar):
     ###############################
 
 
-
+    plt.tight_layout()
     plt.show()
 
 
@@ -1128,7 +1268,7 @@ def optimalMinCost_Budget_Simulation(dictVar,t1,tstep,minCost,maxCost,cStep,**kw
         json.dump(data, f,indent = 4)
 
 
-def optimalMinCost_Budget_plots(dictVar):
+def optimalMinCost_Budget_plots(dictVar, showAllPlots = False):
 
 
     ############################################
@@ -1136,7 +1276,6 @@ def optimalMinCost_Budget_plots(dictVar):
     #filename = 'optimalMinCost_Budget_Simulation.json'
     totCostLevels = dictVar['totCostLevels']
     deathLevels = dictVar['deathLevels']
-    showAllPlots = dictVar['showAllPlots']
     
     filePath = os.path.join('./', filename)
 
@@ -1312,7 +1451,7 @@ def optimalMinCost_Budget_plots(dictVar):
     plt.scatter( blackDots[0], blackDots[1] , s = 100,marker = '*', color = 'k', zorder = 2)
 
 
-
+    plt.tight_layout()
     plt.show()
 
 
@@ -1435,7 +1574,7 @@ def findMinCostForGivenDeath(implementCostArr,nDeathsArr,xArray,yArray,deathValu
     '''
 
 
-    optVals = [ [], [], [], [] ]
+    optVals = [ [], [], [], [] , [] ]
 
     for contourLvl in deathValue :
 
@@ -1481,6 +1620,8 @@ def findMinCostForGivenDeath(implementCostArr,nDeathsArr,xArray,yArray,deathValu
             optVals[1].append( cPoint ) # Col value
             optVals[2].append( contourLvl ) # NUMBER OF DEATHS
             optVals[3].append( tmp[minIdx] ) # IMPLEMENTATION COST
+            optVals[4].append( contourLvl )
+
 
     return np.array(optVals)
     
@@ -1667,12 +1808,6 @@ def pareto_plot(dictVar,xDays = 16):
     ax.set_title('Pareto optima for 3 strategies')
     ax.set_aspect('auto','box')
     
-    xLimits = dictVar['xLimits']
-    yLimits = dictVar['yLimits']
-    if len(xLimits)==2:
-        ax.set_xlim(xLimits[0],xLimits[1])
-    if len(yLimits)==2:
-        ax.set_ylim(yLimits[0],yLimits[1])
     ax.grid(True)
 
 
@@ -1836,12 +1971,7 @@ def implementCost_VS_StartDay(dictVar, deathValue = [ 40E3,80E3]):
         ax.plot(xArrR0,yArrR0,'+:',label='$R_e$ fraction w/ {}K deaths'.format(deaths))
         ax.plot(xArrconstRvars,yArrconstRvars,'*:',label='Target $R_e$  w/ {}K deaths'.format(deaths))
 
-    xLimits = dictVar['xLimits']
-    yLimits = dictVar['yLimits']
-    if len(xLimits)==2:
-        ax.set_xlim(xLimits[0],xLimits[1])
-    if len(yLimits)==2:
-        ax.set_ylim(yLimits[0],yLimits[1])
+
     # ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     ax.legend()
     ax.grid(True)
@@ -2019,12 +2149,6 @@ def Deaths_VS_StartDay(dictVar, costValue = [ 2E9,4E9,6E9]):
 
     ax.set_xlabel('Control policy start day')
     ax.set_ylabel('Number of deaths')
-    xLimits = dictVar['xLimits']
-    yLimits = dictVar['yLimits']
-    if len(xLimits)==2:
-        ax.set_xlim(xLimits[0],xLimits[1])
-    if len(yLimits)==2:
-        ax.set_ylim(yLimits[0],yLimits[1])
 
     ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     ax.grid(True)
@@ -2057,12 +2181,14 @@ def interpolation_for_ParetoHeatmaps(rowArray,colArray,trueDeath , arr):
     
     # Do all the interpolations
     for qq in range(len(arr)):
+
         z = arr[qq][idx,: ].flatten()
+
         tmp = griddata( points = (origRow,col), 
                      values = z , 
                      xi = (newRow , col),
                      fill_value= 0,
-                     method = 'linear')
+                     method = 'nearest')
         arr[qq]=np.reshape(tmp,(nRow,nCol))
 
 
@@ -2079,7 +2205,8 @@ def ctrlMeasures_paretoHeatmaps_R(dictVar):
 
     recomputeData = dictVar['recomputeData']
 
-    deathLevels = np.arange(5000, 120001 , 5000)
+    deathLevels = dictVar['deathLevels']
+    deathLevels = np.linspace(deathLevels[0],deathLevels[-1],len(deathLevels) * 2 +1)
 
     tf = dictVar['tf']
     uMax = dictVar['uMax']
@@ -2110,7 +2237,7 @@ def ctrlMeasures_paretoHeatmaps_R(dictVar):
                                     tmp[2:,1:-1] + tmp[2:,2:] +
                                     4*tmp[1:-1,1:-1])/12                                
     
-        startDateArr,fracArr,_,_ = findMinCostForGivenDeath(implementCostArrRtgt,
+        startDateArr,fracArr,_,_,rowDeaths = findMinCostForGivenDeath(implementCostArrRtgt,
                                                 nDeathsRtgt,
                                                 tArrayRtgt,
                                                 fracArrayRtgt,
@@ -2161,12 +2288,15 @@ def ctrlMeasures_paretoHeatmaps_R(dictVar):
             'xCumDeaths': xCumDeaths.tolist(),
             'xRecovered': xRecovered.tolist(),
             'xInfected': xInfected.tolist(),
-            'xHosp': xHosp.tolist() }
+            'xHosp': xHosp.tolist(),
+            'rowDeaths':rowDeaths.tolist() }
     
         filePath = dictVar['filename'][1]
     
         with open(filePath,'w') as f:
             json.dump(data, f,indent = 4)
+
+        rowArray = rowDeaths
 
     else: # Read data from file
 
@@ -2185,9 +2315,10 @@ def ctrlMeasures_paretoHeatmaps_R(dictVar):
         xInfected = np.array(data['xInfected'])
         xHosp = np.array(data['xHosp'])
 
-    
 
-    rowArray = deathLevels
+    rowArray = np.array(data['rowDeaths'])
+
+
     colArray = list(range(180))
     trueDeaths = xCumDeaths[:,-1]
     limits = [0 , tf , min(trueDeaths) , max(trueDeaths) ]
@@ -2289,7 +2420,8 @@ def ctrlMeasures_paretoHeatmaps_Budget(dictVar):
     recomputeData = dictVar['recomputeData']
 
 
-    deathLevels = np.arange(0, 120001 , 5000)
+    deathLevels = dictVar['deathLevels']
+    deathLevels = np.linspace(deathLevels[0],deathLevels[-1],len(deathLevels) * 2 +1)
 
 
     tf = dictVar['tf']
@@ -2323,7 +2455,7 @@ def ctrlMeasures_paretoHeatmaps_Budget(dictVar):
                                     tmp[2:,1:-1] + tmp[2:,2:] +
                                     4*tmp[1:-1,1:-1])/12                                 
     
-        startDateArr,costArr,_,_ = findMinCostForGivenDeath(implementCostArrBudget,
+        startDateArr,costArr,_,_,rowDeaths = findMinCostForGivenDeath(implementCostArrBudget,
                                                 nDeathsBudget,
                                                 tArrayBudget,
                                                 costArrayBudget,
@@ -2368,7 +2500,8 @@ def ctrlMeasures_paretoHeatmaps_Budget(dictVar):
             'xCumDeaths': xCumDeaths.tolist(),
             'xRecovered': xRecovered.tolist(),
             'xInfected': xInfected.tolist(),
-            'xHosp': xHosp.tolist() }
+            'xHosp': xHosp.tolist(),
+            'rowDeaths':rowDeaths.tolist() }
     
         filePath = dictVar['filename'][1]
     
@@ -2392,65 +2525,94 @@ def ctrlMeasures_paretoHeatmaps_Budget(dictVar):
 
     ## Plot data
     
+    rowArray = np.array(data['rowDeaths'])
+
+    colArray = list(range(180))
+    trueDeaths = xCumDeaths[:,-1]
+    limits = [0 , tf , min(trueDeaths) , max(trueDeaths) ]
+
+    arr = [uLowTest, uHighTest , uLowDist , uHighDist , xCumDeaths,xRecovered, xInfected, xHosp]
+ 
+    arrSorted = interpolation_for_ParetoHeatmaps(rowArray,colArray,trueDeaths, arr)
     
+    uLowTestInterpol = arrSorted[0]
+    uHighTestInterpol = arrSorted[1]
+    uLowDistInterpol = arrSorted[2]
+    uHighDistInterpol = arrSorted[3]
+
+    xCumDeathsInterpol = arrSorted[4]
+    xRecoveredInterpol = arrSorted[5]
+    xInfectedInterpol= arrSorted[6]
+    xHospInterpol = arrSorted[7]
+
+
+
     limits = [0,tf,min(deathLevels),max(deathLevels)]
     
     plt.figure(1)
-    plt.imshow(uLowTest,origin = 'lower',extent = limits,aspect='auto',interpolation = 'gaussian',vmin=0, vmax=uMax[1])
+    plt.imshow(uLowTestInterpol,origin = 'lower',extent = limits,aspect='auto',interpolation = 'gaussian',vmin=0, vmax=uMax[1])
     plt.colorbar()
     plt.title('Low-Risk Testing')
     plt.xlabel('Day')
     plt.ylabel('Number of Deaths')
+    plt.tight_layout()
    
 
     plt.figure(2)
-    plt.imshow(uHighTest,origin = 'lower',extent = limits,aspect='auto',interpolation = 'gaussian',vmin=0, vmax=uMax[1])
+    plt.imshow(uHighTestInterpol,origin = 'lower',extent = limits,aspect='auto',interpolation = 'gaussian',vmin=0, vmax=uMax[1])
     plt.colorbar()
     plt.title('High-Risk Testing')
     plt.xlabel('Day')
     plt.ylabel('Number of Deaths')
+    plt.tight_layout()
 
     plt.figure(3)
-    plt.imshow(uLowDist,origin = 'lower',extent = limits,aspect='auto',interpolation = 'gaussian',vmin=0, vmax=uMax[2])
+    plt.imshow(uLowDistInterpol,origin = 'lower',extent = limits,aspect='auto',interpolation = 'gaussian',vmin=0, vmax=uMax[2])
     plt.colorbar()
     plt.title('Low-Risk Social Distancing')
     plt.xlabel('Day')
     plt.ylabel('Number of Deaths')
+    plt.tight_layout()
 
     plt.figure(4)
-    plt.imshow(uHighDist,origin = 'lower',extent = limits,aspect='auto',interpolation = 'gaussian',vmin=0, vmax=uMax[3])
+    plt.imshow(uHighDistInterpol,origin = 'lower',extent = limits,aspect='auto',interpolation = 'gaussian',vmin=0, vmax=uMax[3])
     plt.colorbar()
     plt.title('High-Risk Social Distancing')
     plt.xlabel('Day')
     plt.ylabel('Number of Deaths')
+    plt.tight_layout()
 
     plt.figure(5)
-    plt.imshow(xCumDeaths,origin = 'lower',extent = limits, aspect='auto',interpolation = 'gaussian')
+    plt.imshow(xCumDeathsInterpol,origin = 'lower',extent = limits, aspect='auto',interpolation = 'gaussian')
     plt.colorbar()
     plt.title('Cumulative deaths')
     plt.xlabel('Day')
     plt.ylabel('Number of Deaths')
+    plt.tight_layout()
 
     plt.figure(6)
-    plt.imshow(xRecovered,origin = 'lower',extent = limits, aspect='auto',interpolation = 'gaussian')
+    plt.imshow(xRecoveredInterpol,origin = 'lower',extent = limits, aspect='auto',interpolation = 'gaussian')
     plt.colorbar()
     plt.title('Cumulative recovered')
     plt.xlabel('Day')
     plt.ylabel('Number of Deaths')
+    plt.tight_layout()
 
     plt.figure(7)
-    plt.imshow(xInfected,origin = 'lower',extent = limits, aspect='auto',interpolation = 'gaussian')
+    plt.imshow(xInfectedInterpol,origin = 'lower',extent = limits, aspect='auto',interpolation = 'gaussian')
     plt.colorbar()
     plt.title('Current infected')
     plt.xlabel('Day')
     plt.ylabel('Number of Deaths')
+    plt.tight_layout()
 
     plt.figure(8)
-    plt.imshow(xHosp,origin = 'lower',extent = limits, aspect='auto',interpolation = 'gaussian')
+    plt.imshow(xHospInterpol,origin = 'lower',extent = limits, aspect='auto',interpolation = 'gaussian')
     plt.colorbar()
     plt.title('Current hospitalized')
     plt.xlabel('Day')
     plt.ylabel('Number of Deaths')
+    plt.tight_layout()
 
 
 

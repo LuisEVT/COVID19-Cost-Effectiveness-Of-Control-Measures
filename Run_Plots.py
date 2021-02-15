@@ -18,20 +18,15 @@ filename = ['optimalMinCost_Budget_Basic.json',\
             'optimalMinCost_rTgt_HiRiskMax.json']
 
 
-dictVar['filename'] = [ filename[0], filename[1], filename[2]]   # COMPARE REGULAR SIMULATIONS
-# dictVar['filename'] = [ filename[3], filename[4], filename[5]] # COMPARE HI-RISK SIMULATIONS
+# dictVar['filename'] = [ filename[0], filename[1], filename[2]] # COMPARE BASIC SIMULATIONS
+dictVar['filename'] = [ filename[3], filename[4], filename[5]] # COMPARE HI-RISK SIMULATIONS
 
 ###################
 ### Plots
 ###################
 
 ## PARETO PLOTS OF COST VERSUS DEATHS ( START DATE NOT INCLUDED)
-pareto_plot(dictVar)
-
-
-## LINE GRAPHS FOR DIFFERENT STRATEGY CLASSES AND
-## FIXED DEATH LEVELS, PLOT COST AS A FUNCTION OF START DAY
-implementCost_VS_StartDay(dictVar, deathValue = [ 40E3,80E3])
+# pareto_plot(dictVar, xDays = 21)
 
 
 ## LINE GRAPHS FOR DIFFERENT STRATEGY CLASSES AND
