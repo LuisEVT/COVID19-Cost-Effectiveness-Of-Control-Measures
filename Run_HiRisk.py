@@ -21,7 +21,6 @@ dictVar['filename'] = [files[0],]
 
 ## RUN SIMULATION
 # optimalMinCost_Budget_Simulation(dictVar,t1 = 51, tstep = 2, minCost = 0, maxCost =  5.1E7, cStep = 2.5E6)
-# optimalMinCost_Budget_Simulation(dictVar,t1 = 51, tstep = 4, minCost = 0, maxCost =  5.1E7, cStep = 5E6)
 
 ## 2D PLOT WITH DEATHS AS WHITE CONTOURS, COST AS COLOR REGIONS
 # optimalMinCost_Budget_plots(dictVar)
@@ -44,7 +43,6 @@ dictVar['filename'] = [files[1],]
 
 ## RUN SIMULATION
 # optimalMinCost_R_Simulation(dictVar,t1 = 51, tstep = 2, f0 = 0.5, ff = 1.0, fstep =0.02)
-# optimalMinCost_R_Simulation(dictVar,t1 = 51, tstep = 5, f0 = 0.5, ff = 1.0, fstep =0.1)
 
 ## 2D PLOT WITH DEATHS AS WHITE CONTOURS, COST AS COLOR REGION
 # optimalMinCost_R_plots(dictVar)
@@ -66,7 +64,6 @@ dictVar['filename'] = [files[2],]
 
 ## RUN SIMULATION
 # optimalMinCost_R_Simulation(dictVar,t1 = 51, tstep = 2, f0 = 0.5, ff = 1.0, fstep =0.02)
-# optimalMinCost_R_Simulation(dictVar,t1 = 51, tstep = 5, f0 = 0.5, ff = 1.0, fstep =0.1)
 
 ## 2D PLOT WITH DEATHS AS WHITE CONTOURS, COST AS COLOR REGIONS
 # optimalMinCost_R_plots(dictVar)
