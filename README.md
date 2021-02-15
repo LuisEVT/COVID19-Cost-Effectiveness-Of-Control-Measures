@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/332964758.svg)](https://zenodo.org/badge/latestdoi/332964758)
+<a href="https://zenodo.org/badge/latestdoi/332964758"><img src="https://zenodo.org/badge/332964758.svg" alt="DOI"></a>
 # COVID19: Cost-Effectiveness Of Control Measures
 
 ## Required Packages 
