@@ -82,7 +82,7 @@ def costFn(xI,xTmp,xTmpH,uTmp,dt,a,b,c,d,e,f):
     uN_H = uTmp[:,2]*sum(xTmpH[:,:8],axis=1)
     uN_R = uTmp[:,2]*sumTmp[1:]
     distCost[:,0] = b[0,1]*(uN_L + 4*uN_H + uN_R)/6 #Linear
-    distCost[:,0] = b[0,2]*uTmp[:,2]*(uN_L + 4*uN_H  + uN_R)/6 #Quadratic
+    distCost[:,0] += b[0,2]*uTmp[:,2]*(uN_L + 4*uN_H  + uN_R)/6 #Quadratic
     
     # Linear and quadratic testing cost subgroup 1    
     sumTmp = sum(xTmp[:,9:-1],axis=1)
