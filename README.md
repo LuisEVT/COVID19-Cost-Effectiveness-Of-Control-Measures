@@ -13,8 +13,7 @@
 - @[christhron](https://github.com/christhron)
 
 ## Publication
-_TBA_
-
+<a href = 'https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3830001'> Cost Effective Reproduction Number Based Strategies for Reducing Deaths from COVID-19 </a>
 
 
 
